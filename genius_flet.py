@@ -1,6 +1,6 @@
 # import flet as ft
 # from flet.canvas import Canvas, Rect, Circle, Text
-# from flet_audio.audio import Audio # O novo import
+# from flet_audio.audio import Audio
 # from random import randrange
 # import os
 # from pathlib import Path
@@ -50,11 +50,12 @@
 #         super().__init__()
 #         self.jogo = JogoGenius()
         
+#         # <-- MUDANÇA AQUI: de .wav para .mp3 -->
 #         self.sons = {
-#             0: Audio(src="som_verde.wav"),
-#             1: Audio(src="som_vermelho.wav"),
-#             2: Audio(src="som_amarelo.wav"),
-#             3: Audio(src="som_azul.wav"),
+#             0: Audio(src="sons/som_verde.mp3"),
+#             1: Audio(src="sons/som_vermelho.mp3"),
+#             2: Audio(src="sons/som_amarelo.mp3"),
+#             3: Audio(src="sons/som_azul.mp3"),
 #         }
 #         self.texto_pontos = ft.Text(f"Recorde: {self.jogo.recorde}", size=24, weight=ft.FontWeight.BOLD)
 #         self.texto_status = ft.Text("Clique em Micro Genius para iniciar", size=18)
@@ -79,7 +80,7 @@
 
 #     def tocar_som(self, cor_id):
 #         self.sons[cor_id].play()
-#         self.page.update() # <-- AJUSTE PRINCIPAL
+#         self.page.update()
 
 #     def criar_formas_base(self):
 #         return list(self.quadrantes.values()) + [
@@ -164,9 +165,10 @@
 # # --- INICIA O JOGO ---
 # ft.app(target=main, view=ft.WEB_BROWSER)
 
+import http
 import flet as ft
-from flet.canvas import Canvas, Rect, Circle, Text
 from flet_audio.audio import Audio
+from flet.canvas import Canvas, Rect, Circle, Text
 from random import randrange
 import os
 from pathlib import Path
@@ -212,17 +214,10 @@ class JogoGenius:
 
 # --- CLASSE DA APLICAÇÃO FLET ---
 class AppGenius(ft.Column):
-    def __init__(self):
+    def __init__(self, sons):
         super().__init__()
         self.jogo = JogoGenius()
-        
-        # <-- MUDANÇA AQUI: de .wav para .mp3 -->
-        self.sons = {
-            0: Audio(src="sons/som_verde.mp3"),
-            1: Audio(src="sons/som_vermelho.mp3"),
-            2: Audio(src="sons/som_amarelo.mp3"),
-            3: Audio(src="sons/som_azul.mp3"),
-        }
+        self.sons = sons
         self.texto_pontos = ft.Text(f"Recorde: {self.jogo.recorde}", size=24, weight=ft.FontWeight.BOLD)
         self.texto_status = ft.Text("Clique em Micro Genius para iniciar", size=18)
         self.quadrantes = {
@@ -239,14 +234,8 @@ class AppGenius(ft.Column):
         self.controls = [self.texto_pontos, self.tabuleiro_interativo, self.texto_status]
         self.horizontal_alignment = ft.CrossAxisAlignment.CENTER
 
-    def did_mount(self):
-        for audio_control in self.sons.values():
-            self.page.overlay.append(audio_control)
-        self.page.update()
-
     def tocar_som(self, cor_id):
         self.sons[cor_id].play()
-        self.page.update()
 
     def criar_formas_base(self):
         return list(self.quadrantes.values()) + [
@@ -317,6 +306,7 @@ class AppGenius(ft.Column):
         return None
 
 # --- FUNÇÃO PRINCIPAL ---
+# --- FUNÇÃO PRINCIPAL (CORRIGIDA) ---
 def main(page: ft.Page):
     page.title = "Genius com Flet"
     page.window_width = 600
@@ -324,9 +314,31 @@ def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.bgcolor = CINZA
-    page.assets_dir = "sons"
-    app = AppGenius()
+    
+    # Esta linha não é mais necessária, pois vamos carregar da web
+    # page.assets_dir = "sons" 
+
+    # --- ALTERAÇÃO PRINCIPAL AQUI ---
+    # 1. Definimos a URL base correta para os arquivos "crus" (raw)
+    base_url = "https://raw.githubusercontent.com/everson-sousa/jogo-microgenius-pygame/main/sons"
+    
+    # 2. Criamos os controles de áudio usando a f-string corretamente
+    sons = {
+        0: Audio(src= "https://github.com/everson-sousa/simon_flet.py/blob/main/som_verde.mp3"),
+        1: Audio(src= "https://github.com/everson-sousa/simon_flet.py/blob/main/som_vermelho.mp3"),
+        2: Audio(src= "https://github.com/everson-sousa/simon_flet.py/blob/main/som_amarelo.mp3"),
+        3: Audio(src= "https://github.com/everson-sousa/simon_flet.py/blob/main/som_azul.mp3"),
+            
+     }
+    
+    # Adiciona os "toca-discos" invisíveis à página
+    for audio_control in sons.values():
+        page.overlay.append(audio_control)
+
+    # Cria a aplicação, passando os controles de som para ela
+    app = AppGenius(sons=sons)
     page.add(app)
+    page.update()
 
 # --- INICIA O JOGO ---
 ft.app(target=main, view=ft.WEB_BROWSER)
