@@ -1,0 +1,9 @@
+# Ignorar ambiente virtual
+.venv/
+venv/
+
+# Ignorar pastas de cache do Python
+__pycache__/
+
+# Ignorar a pasta do Git
+.git/
